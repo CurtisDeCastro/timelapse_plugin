@@ -5,6 +5,13 @@
 /.pnp
 .pnp.js
 
+# credentials
+/credentials.js
+
+# photos + media
+/frames
+**.gif
+
 # testing
 /coverage
 
