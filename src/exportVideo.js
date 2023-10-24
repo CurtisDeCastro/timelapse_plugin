@@ -1,42 +1,28 @@
 // Import required libraries
 const axios = require('axios');
-const GIFEncoder = require('gif-encoder-2');
-const { createCanvas, loadImage } = require('canvas');
+const { clientId, clientSecret } = require('../credentials');
 const fs = require('fs').promises;
 const qs = require('qs');
 
-// Initialize variables
-const clientId = 'f83f31de8eb7c696d2e7f9ad1deeaab4b6873e5dea33183ae4b35b46a1cf26ca';
-const apiToken = 'a3570c4e6f799eefebb9420ef0c347d8eb2298449aa4ee505f9fcc3c41b1138a5510138c27fe5fcfd5f5ae6dc6c7667551392f99e8f7f3a6d4be711d3ce4e92e';
+const ffmpegPath = require('@ffmpeg-installer/ffmpeg').path;
+const ffmpeg = require('fluent-ffmpeg');
+ffmpeg.setFfmpegPath(ffmpegPath);
+
+// Initialize variables. THESE ARE ALL TO BE REPLACED BY THE PLUGIN HOOKS
 const endpointUrl = 'https://api.sigmacomputing.com';
 const elementId = 'W57dA_aYUo';
 const workbookId = '5pk17PBfdW3CKyZ2QJbMxY';
-
 let times = [];
-for (let x = 2010; x <= 2018; x++) {
+for (let x = 1910; x <= 2018; x++) {
     times.push(x.toString())
 }
 
-// Initialize GIF Encoder
-const encoder = new GIFEncoder(1600, 2070);
-encoder.setDelay(500);
-encoder.start();
-
-// Function to add frame to GIF
-async function addFrameToGIF(filePath) {
-    const canvas = createCanvas(1600, 2070);
-    const ctx = canvas.getContext('2d');
-    const img = await loadImage(filePath);
-    ctx.drawImage(img, 0, 0, 1600, 2070);
-    encoder.addFrame(ctx);
-}
-
-// Function to obtain a session token from Sigma Computing API
-async function obtainSessionToken(clientId, apiToken, endpointUrl) {
+// Function to obtain session token from Sigma Computing API
+async function getToken(clientId, clientSecret, endpointUrl) {
     let data = qs.stringify({
       'grant_type': 'client_credentials',
       'client_id': clientId,
-      'client_secret': apiToken 
+      'client_secret': clientSecret 
     });
 
     let config = {
@@ -62,7 +48,7 @@ async function obtainSessionToken(clientId, apiToken, endpointUrl) {
 // Function to fetch chart from Sigma Computing API
 async function fetchQueryId(elementId, timeframe, sessionToken) {
     let data = JSON.stringify({
-        "elementId": elementId,
+        // "elementId": elementId,
         "format": {
             "type": "png"
         },
@@ -124,12 +110,12 @@ async function downloadPNG(queryId, timeframe, sessionToken) {
 }
 
 // Polling function for downloadPNG
-async function pollForDownload(queryId, timeframe, token, maxAttempts = 40, interval = 1000) {
+async function pollForDownload(queryId, timeframe, token, maxAttempts = 300, interval = 1000) {
     for (let i = 0; i < maxAttempts; i++) {
         let status = await checkDownloadStatus(queryId, token);
 
         if (status === 200) {
-            console.log(`QUERY ID: ${queryId}`, `TIMEFRAME: ${timeframe}`)
+            console.log(`DOWNLOADING QUERY ID: ${queryId}`, `TIMEFRAME: ${timeframe}`)
             return await downloadPNG(queryId, timeframe, token);
         }
 
@@ -161,44 +147,53 @@ async function checkDownloadStatus(queryId, token) {
     }
 }
 
-async function Main(times) {
+async function generateMOVFromFrames(outputPath, framePattern) {
 
-    let token = await obtainSessionToken(clientId, apiToken, endpointUrl);
+    const frameListPath = './frameList.txt';
+    const framePaths = times.map(year => `file './frames/frame_${year}.png'`).join('\n');
+    await fs.writeFile(frameListPath, framePaths);
 
-    for (const time of times) {
-        console.log(time);
-        try {
-            let queryId = await fetchQueryId(elementId, time, token);
-            if (!queryId) {
-                console.error("Invalid queryId received");
-                continue; // Continue to the next year if there's an issue with the current one
-            }
-            await pollForDownload(queryId, time, token);
-        } catch (error) {
-            console.error("Error in Main:", error.message);
-        }
-    }
-    // Main function to create GIF
-    async function createGIF(times) {
-        console.log(times, typeof times)
-        // Sequentially fetch each chart and save it as a PNG
-        for (const time of times) {
-        console.log(time)
-        await addFrameToGIF(`./frames/frame_${time}.png`);
-        }
-    
-        // Finish and save GIF
-        encoder.finish();
-        const gifBuffer = encoder.out.getData();
-    
-        // Save GIF to local file system
-        await fs.writeFile('./timelapse.gif', gifBuffer);
-    
-        console.log('GIF has been saved as timelapse.gif');
-    }
-    
-    // Run the script
-    createGIF(times).catch(err => console.log(err));
+    return new Promise((resolve, reject) => {
+        ffmpeg()
+            .input(frameListPath)
+            .inputOptions(['-f concat', '-safe 0'])
+            .inputFPS(5)  // Set this to your desired frame rate
+            .videoCodec('libx264')  // Using the x264 codec for .mov format
+            .toFormat('mp4')
+            .on('end', resolve)
+            .on('error', reject)
+            .save(outputPath);
+    });
 }
 
-Main(times);
+async function Main(times) {
+    let token = await getToken(clientId, clientSecret, endpointUrl);
+
+    // Obtain all the queryIds first, then download them concurrently
+    const queryIds = await Promise.all(times.map(async time => {
+        try {
+            return await fetchQueryId(elementId, time, token);
+        } catch (error) {
+            console.error("Error fetching queryId:", error.message);
+            return null; // Return null for failed attempts
+        }
+    }));
+
+    // Filter out any null queryIds
+    const validQueryIds = queryIds.filter(Boolean);
+
+    // Download PNGs concurrently using Promise.all
+    await Promise.all(validQueryIds.map((queryId, index) => {
+        return pollForDownload(queryId, times[index], token);
+    }));
+
+    // Generate .mov from PNG frames
+    let outputPath = `./timelapse_${times[0]}-${times[times.length-1]}.mp4`;
+    let framePattern = './frames/frame_%d.png';  // FFmpeg pattern for frames
+
+    await generateMOVFromFrames(outputPath, framePattern);
+
+    console.log(`Video has been saved as ${outputPath}`);
+}
+
+Main(times).catch(err => console.log(err));

@@ -1,9 +1,11 @@
+
 // Import required libraries
 const axios = require('axios');
 const GIFEncoder = require('gif-encoder-2');
 const { createCanvas, loadImage } = require('canvas');
 const fs = require('fs').promises;
 const qs = require('qs');
+const ffmpeg = require('fluent-ffmpeg');
 
 // Initialize variables
 const clientId = 'f83f31de8eb7c696d2e7f9ad1deeaab4b6873e5dea33183ae4b35b46a1cf26ca';
@@ -178,27 +180,24 @@ async function Main(times) {
             console.error("Error in Main:", error.message);
         }
     }
-    // Main function to create GIF
-    async function createGIF(times) {
-        console.log(times, typeof times)
-        // Sequentially fetch each chart and save it as a PNG
-        for (const time of times) {
-        console.log(time)
-        await addFrameToGIF(`./frames/frame_${time}.png`);
-        }
-    
-        // Finish and save GIF
-        encoder.finish();
-        const gifBuffer = encoder.out.getData();
-    
-        // Save GIF to local file system
-        await fs.writeFile('./timelapse.gif', gifBuffer);
-    
-        console.log('GIF has been saved as timelapse.gif');
+    // Main function to create a video
+    async function createVideo(times) {
+        // Use FFmpeg to create a video from the PNG frames
+        ffmpeg()
+            .input('./frames/frame_%d.png') // assuming the frames are numbered sequentially
+            .inputFPS(2) // 2 frames per second
+            .toFormat('mp4')
+            .on('end', () => {
+                console.log('Video has been saved as timelapse.mp4');
+            })
+            .on('error', (err) => {
+                console.error('Error:', err);
+            })
+            .save('./timelapse.mp4');
     }
-    
+
     // Run the script
-    createGIF(times).catch(err => console.log(err));
+    createVideo(times).catch(err => console.log(err));
 }
 
 Main(times);

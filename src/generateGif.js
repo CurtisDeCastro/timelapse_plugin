@@ -1,42 +1,29 @@
-// Import required libraries
 const axios = require('axios');
 const GIFEncoder = require('gif-encoder-2');
 const { createCanvas, loadImage } = require('canvas');
 const fs = require('fs').promises;
 const qs = require('qs');
 
-// Initialize variables
-const clientId = 'f83f31de8eb7c696d2e7f9ad1deeaab4b6873e5dea33183ae4b35b46a1cf26ca';
-const apiToken = 'a3570c4e6f799eefebb9420ef0c347d8eb2298449aa4ee505f9fcc3c41b1138a5510138c27fe5fcfd5f5ae6dc6c7667551392f99e8f7f3a6d4be711d3ce4e92e';
+// Initialize variables. THESE ARE ALL TO BE REPLACED BY THE PLUGIN HOOKS
 const endpointUrl = 'https://api.sigmacomputing.com';
-const elementId = 'W57dA_aYUo';
-const workbookId = '5pk17PBfdW3CKyZ2QJbMxY';
+const gifWidth = 1600;
+const gifHeight = 928;
+const frameSpeed = 250;
 
-let times = [];
-for (let x = 2010; x <= 2018; x++) {
-    times.push(x.toString())
-}
-
-// Initialize GIF Encoder
-const encoder = new GIFEncoder(1600, 2070);
-encoder.setDelay(500);
-encoder.start();
-
-// Function to add frame to GIF
-async function addFrameToGIF(filePath) {
-    const canvas = createCanvas(1600, 2070);
+async function addFrameToGIF(filePath, encoder) {
+    const canvas = createCanvas(gifWidth, gifHeight);
     const ctx = canvas.getContext('2d');
     const img = await loadImage(filePath);
-    ctx.drawImage(img, 0, 0, 1600, 2070);
+    ctx.drawImage(img, 0, 0, gifWidth, gifHeight);
     encoder.addFrame(ctx);
 }
 
-// Function to obtain a session token from Sigma Computing API
-async function obtainSessionToken(clientId, apiToken, endpointUrl) {
+// Function to obtain session token from Sigma Computing API
+async function getToken(clientId, clientSecret, endpointUrl) {
     let data = qs.stringify({
       'grant_type': 'client_credentials',
       'client_id': clientId,
-      'client_secret': apiToken 
+      'client_secret': clientSecret 
     });
 
     let config = {
@@ -60,9 +47,9 @@ async function obtainSessionToken(clientId, apiToken, endpointUrl) {
 }
 
 // Function to fetch chart from Sigma Computing API
-async function fetchQueryId(elementId, timeframe, sessionToken) {
+async function fetchQueryId(workbookId, nodeId, timeframe, sessionToken) {
     let data = JSON.stringify({
-        "elementId": elementId,
+        "elementId": nodeId,
         "format": {
             "type": "png"
         },
@@ -74,12 +61,16 @@ async function fetchQueryId(elementId, timeframe, sessionToken) {
         "offset": 0
     });
 
+    if (nodeId === null){
+        delete data.elementId;
+    }
+
     console.log(`TIMEFRAME: ${timeframe}`,data);
 
     let config = {
         method: 'post',
         maxBodyLength: Infinity,
-        url: `https://api.sigmacomputing.com/v2/workbooks/${workbookId}/export`,
+        url: `${endpointUrl}/v2/workbooks/${workbookId}/export`,
         headers: { 
           'Content-Type': 'application/json', 
           'Accept': 'application/json',
@@ -102,7 +93,7 @@ async function downloadPNG(queryId, timeframe, sessionToken) {
     let config = {
         method: 'get',
         maxBodyLength: Infinity,
-        url: `https://api.sigmacomputing.com/v2/query/${queryId}/download`,
+        url: `${endpointUrl}/v2/query/${queryId}/download`,
         responseType: 'arraybuffer',
         headers: { 
             'Accept': 'application/json',
@@ -124,7 +115,7 @@ async function downloadPNG(queryId, timeframe, sessionToken) {
 }
 
 // Polling function for downloadPNG
-async function pollForDownload(queryId, timeframe, token, maxAttempts = 40, interval = 1000) {
+async function pollForDownload(queryId, timeframe, token, maxAttempts = 300, interval = 1000) {
     for (let i = 0; i < maxAttempts; i++) {
         let status = await checkDownloadStatus(queryId, token);
 
@@ -144,7 +135,7 @@ async function checkDownloadStatus(queryId, token) {
     let config = {
         method: 'get',
         maxBodyLength: Infinity,
-        url: `https://api.sigmacomputing.com/v2/query/${queryId}/download`,
+        url: `${endpointUrl}/v2/query/${queryId}/download`,
         responseType: 'arraybuffer',
         headers: { 
             'Accept': 'application/json',
@@ -161,44 +152,43 @@ async function checkDownloadStatus(queryId, token) {
     }
 }
 
-async function Main(times) {
+async function generateGif(clientId, clientSecret, workbookId, nodeId, timeframes) {
+    const encoder = new GIFEncoder(gifWidth, gifHeight);
 
-    let token = await obtainSessionToken(clientId, apiToken, endpointUrl);
+    encoder.setDelay(frameSpeed);
+    encoder.start();
 
-    for (const time of times) {
-        console.log(time);
+    let token = await getToken(clientId, clientSecret, endpointUrl);
+
+    const queryIds = await Promise.all(timeframes.map(async time => {
         try {
-            let queryId = await fetchQueryId(elementId, time, token);
-            if (!queryId) {
-                console.error("Invalid queryId received");
-                continue; // Continue to the next year if there's an issue with the current one
-            }
-            await pollForDownload(queryId, time, token);
+            return await fetchQueryId(workbookId, nodeId, time, token);
         } catch (error) {
-            console.error("Error in Main:", error.message);
+            console.error("Error fetching queryId:", error.message);
+            return null;
         }
+    }));
+
+    const validQueryIds = queryIds.filter(Boolean);
+
+    await Promise.all(validQueryIds.map((queryId, index) => {
+        return pollForDownload(queryId, timeframes[index], token);
+    }));
+
+    for (const time of timeframes) {
+        await addFrameToGIF(`./frames/frame_${time}.png`, encoder);
     }
-    // Main function to create GIF
-    async function createGIF(times) {
-        console.log(times, typeof times)
-        // Sequentially fetch each chart and save it as a PNG
-        for (const time of times) {
-        console.log(time)
-        await addFrameToGIF(`./frames/frame_${time}.png`);
-        }
-    
-        // Finish and save GIF
-        encoder.finish();
-        const gifBuffer = encoder.out.getData();
-    
-        // Save GIF to local file system
-        await fs.writeFile('./timelapse.gif', gifBuffer);
-    
-        console.log('GIF has been saved as timelapse.gif');
-    }
-    
-    // Run the script
-    createGIF(times).catch(err => console.log(err));
+
+    encoder.finish();
+    const gifBuffer = encoder.out.getData();
+
+    let random = Math.random().toString().split(".")[1];
+    let filepath = './timelapse_'+ random + '.gif';
+    await fs.writeFile(filepath, gifBuffer);
+
+    console.log(`GIF has been saved as ${filepath}`);
+
+    return filepath;  // Return the gif path
 }
 
-Main(times);
+module.exports = generateGif;
