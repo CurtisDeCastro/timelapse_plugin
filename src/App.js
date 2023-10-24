@@ -1,6 +1,7 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
+import ReactPlayer from 'react-player';
 import VideoGenerator from "./components/videoGenerator.js";
-import './App.css';
+// import './App.css';
 
 import {
 	client,
@@ -16,42 +17,59 @@ client.config.configureEditorPanel([
     { name: 'Client ID*', type: 'text', secure: true},
     { name: 'Workbook ID*', type: 'text'},
     { name: 'Element ID (optional)', type: 'text'},
+    { name: 'Endpoint URL*', type: 'text'},
 ]);
 
 const VideoPlayer = () => {
     const config = useConfig();
     const sigmaData = useElementData(config.source);
-    const times = sigmaData[client.config.getKey("Timeframe")];
-    const clientId = sigmaData[client.config.getKey("Client ID*")];
-    const clientSecret = sigmaData[client.config.getKey("Client Secret*")];
-    const workbookId = sigmaData[client.config.getKey("Workbook ID*")];
-    const elementId = sigmaData[client.config.getKey("Element ID (optional)")];
-    // const videoSrc = 'public/media/videos/timelapse_2010-2018.mp4';
-    const videoRef = useRef(null);
     
+    const requestParams = {
+        times: sigmaData[client.config.getKey("Timeframe")],
+        clientId: client.config.getKey("Client ID*"),
+        clientSecret: client.config.getKey("Client Secret*"),
+        workbookId: client.config.getKey("Workbook ID*"),
+        elementId: client.config.getKey("Element ID (optional)"),
+        endpointUrl: client.config.getKey("Endpoint URL*")
+    }
+
+    const {times, clientId, clientSecret, workbookId, elementId, endpointUrl } = requestParams;
+    // const videoSrc = '/media/videos/timelapse_2010-2018.mp4';
+
     const [videoSrc, setVideoSrc] = useState('');
 
+    useEffect(() => {
+        console.log("video source: ", videoSrc);
+      }, [videoSrc]);
+
     const handleVideoSrcUpdate = (path) => {
-        setVideoSrc(path);
+        console.log("changing video src to path: ",path);
+        setVideoSrc('.'+path);
     };
 
-
-    if (times) {
-    console.log("Times in App.js:", times);
+    if (times && videoSrc.length === 0) {
       return (
-        <VideoGenerator times={times} />
+        <VideoGenerator
+          times={times} 
+          clientId={clientId}
+          clientSecret={clientSecret}
+          workbookId={workbookId}
+          elementId={elementId}
+          endpointUrl={endpointUrl}
+          handleVideoSrcUpdate={handleVideoSrcUpdate}
+        />
       )
     }
 
     return (
         <div>
-            <video
-                ref={videoRef}
-                width="1920"
-                height="1080"
-                src={videoSrc}
-                controls={true}
-            />
+          <ReactPlayer 
+            url='/media/videos/timelapse_2010-2018.mp4' 
+            playing={true} 
+            controls={true} 
+            width='1920' 
+            height='1080' 
+          />
         </div>
     )
 };

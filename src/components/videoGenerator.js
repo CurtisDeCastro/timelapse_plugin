@@ -1,13 +1,12 @@
 import axios from 'axios';
 
 // Destructure the props in the function parameter
-function VideoGenerator(times) {
-  console.log("VG TIMES", times);
-
+function VideoGenerator(props) {
+  const handleVideoSrcUpdate = props.handleVideoSrcUpdate;
   const handleGenerateVideo = async () => {
       try {
-        const response = await axios.post('http://localhost:3001/generateVideo', times);
-        // handleVideoSrcUpdate(response.data.path);
+        const response = await axios.post('http://localhost:3001/generateVideo', props)
+          .then((response) => (handleVideoSrcUpdate(response.data[0].path)));
       } catch (error) {
         console.error("Error generating video:", error.response);
       }

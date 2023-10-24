@@ -12,18 +12,13 @@ const fetchExportQueryId = require('./methods/fetchExportQueryId.js');
 const pollForDownload = require('./methods/pollForDownload.js');
 const generateMOVFromFrames = require('./methods/generateMOVFromFrames.js');
 
-// Initialize variables. THESE ARE ALL TO BE REPLACED BY REQUEST PARAMETERS
-const { clientId, clientSecret } = require('../credentials');
-const endpointUrl = 'https://api.sigmacomputing.com';
-const elementId = null;
-const workbookId = '5pk17PBfdW3CKyZ2QJbMxY';
-let times = []; 
-
 // Need to work in the line below:
 // async function Main(times, clientId, clientSecret, endpointUrl) {
 
-async function Main(times) {
-    console.log("TIMES:",times);
+async function Main(props) {
+    let { times, clientId, clientSecret, workbookId, elementId, endpointUrl } = props;
+
+    times = times.sort((a, b) => a - b);
 
     let token = await getToken(clientId, clientSecret, endpointUrl);
 
@@ -58,12 +53,11 @@ app.post('/generateVideo', async (req, res) => {
     res.header("Access-Control-Allow-Origin", "http://localhost:3000");  // Notice the double slashes after "http:"
     res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
     res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE');
-    console.log("REQ BODY",req.body)
-    times = req.body.times;
-    times.sort((a, b) => a - b);
+    
+    const props = req.body;
 
     try {
-      let path = await Main(times);
+      let path = await Main(props);
       res.status(200).send([{path}, { message: "Video generated successfully!" }]);
     } catch (error) {
       res.status(500).send({ error: error.message });
