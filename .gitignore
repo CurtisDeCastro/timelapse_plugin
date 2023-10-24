@@ -11,6 +11,7 @@
 # photos + media
 /frames
 **.gif
+**.mp4
 
 # testing
 /coverage

@@ -1,7 +1,5 @@
 import React, { useRef, useState } from 'react';
-import axios from 'axios';
 import VideoGenerator from "./components/videoGenerator.js";
-
 import './App.css';
 
 import {
@@ -17,30 +15,32 @@ client.config.configureEditorPanel([
     { name: 'Client Secret*', type: 'text', secure: true},
     { name: 'Client ID*', type: 'text', secure: true},
     { name: 'Workbook ID*', type: 'text'},
-    { name: 'Node ID (optional)', type: 'text'},
+    { name: 'Element ID (optional)', type: 'text'},
 ]);
 
 const VideoPlayer = () => {
-    // const times = client.config.getKey("Timeframe").split('-')[1].split("/")[0];
     const config = useConfig();
     const sigmaData = useElementData(config.source);
     const times = sigmaData[client.config.getKey("Timeframe")];
-    console.log(times);
+    const clientId = sigmaData[client.config.getKey("Client ID*")];
+    const clientSecret = sigmaData[client.config.getKey("Client Secret*")];
+    const workbookId = sigmaData[client.config.getKey("Workbook ID*")];
+    const elementId = sigmaData[client.config.getKey("Element ID (optional)")];
     // const videoSrc = 'public/media/videos/timelapse_2010-2018.mp4';
-    const videoSrc = '';
-
     const videoRef = useRef(null);
+    
+    const [videoSrc, setVideoSrc] = useState('');
 
-    const [currentTime, setCurrentTime] = useState(0);
-
-
-    const handleTimeUpdate = () => {
-        setCurrentTime(videoRef.current.currentTime);
+    const handleVideoSrcUpdate = (path) => {
+        setVideoSrc(path);
     };
 
 
     if (times) {
-      return (<VideoGenerator times={times.sort()} />)
+    console.log("Times in App.js:", times);
+      return (
+        <VideoGenerator times={times} />
+      )
     }
 
     return (
@@ -49,7 +49,6 @@ const VideoPlayer = () => {
                 ref={videoRef}
                 width="1920"
                 height="1080"
-                onTimeUpdate={handleTimeUpdate}
                 src={videoSrc}
                 controls={true}
             />
