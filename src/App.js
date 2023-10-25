@@ -42,8 +42,8 @@ const VideoPlayer = () => {
       }, [videoSrc]);
 
     const handleVideoSrcUpdate = (path) => {
-        console.log("changing video src to path: ",path);
-        setVideoSrc('.'+path);
+        console.log("changing video src to path: ",path.split('public')[1]);
+        setVideoSrc(path.split('public')[1]);
     };
 
     if (times && videoSrc.length === 0) {
