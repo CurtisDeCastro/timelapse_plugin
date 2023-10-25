@@ -15,7 +15,7 @@ const generateMOVFromFrames = require('./methods/generateMOVFromFrames.js');
 // Need to work in the line below:
 // async function Main(times, clientId, clientSecret, endpointUrl) {
 
-async function Main(props) {
+async function generateTimelapseFromWorkbookData(props) {
     let { times, clientId, clientSecret, workbookId, elementId, endpointUrl } = props;
 
     times = times.sort((a, b) => a - b);
@@ -41,7 +41,9 @@ async function Main(props) {
     }));
 
     // Generate .mov from PNG frames
-    let outputPath = `./timelapse_${times[0]}-${times.reduce((a, b) => Math.max(a, b), -Infinity)}.mp4`;
+    let outputPath = `./public/media/videos/timelapse_${times[0]}-${times.reduce((a, b) => Math.max(a, b), -Infinity)}.mp4`;
+
+    console.log('server.js - output path:', outputPath);
 
     await generateMOVFromFrames(outputPath, times);
 
@@ -57,7 +59,7 @@ app.post('/generateVideo', async (req, res) => {
     const props = req.body;
 
     try {
-      let path = await Main(props);
+      let path = await generateTimelapseFromWorkbookData(props);
       res.status(200).send([{path}, { message: "Video generated successfully!" }]);
     } catch (error) {
       res.status(500).send({ error: error.message });

@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import ReactPlayer from 'react-player';
 import VideoGenerator from "./components/videoGenerator.js";
 // import './App.css';
@@ -6,7 +6,6 @@ import VideoGenerator from "./components/videoGenerator.js";
 import {
 	client,
 	useConfig,
-	useElementColumns,
 	useElementData,
 } from "@sigmacomputing/plugin";
 
@@ -64,7 +63,7 @@ const VideoPlayer = () => {
     return (
         <div>
           <ReactPlayer 
-            url='/media/videos/timelapse_2010-2018.mp4' 
+            url={videoSrc} 
             playing={true} 
             controls={true} 
             width='1920' 

@@ -16,8 +16,8 @@ async function downloadPNG(queryId, timeframe, sessionToken) {
     try {
       const response = await axios.request(config);
       const imageBuffer = Buffer.from(response.data);
-      await fs.writeFile(`./frames/frame_${timeframe}.png`, imageBuffer);
-      console.log(`Frame ${timeframe} downloaded and saved.`);
+      await fs.writeFile(`./public/media/frames/frame_${timeframe}.png`, imageBuffer);
+      console.log(`downloadPNG.js - Frame ${timeframe} downloaded and saved.`);
     } catch (error) {
       console.log(error);
       throw new Error("Failed to download PNG");

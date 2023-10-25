@@ -7,7 +7,7 @@ async function pollForDownload(queryId, timeframe, token, maxAttempts = 300, int
         let status = await checkDownloadStatus(queryId, token);
 
         if (status === 200) {
-            console.log(`DOWNLOADING QUERY ID: ${queryId}`, `TIMEFRAME: ${timeframe}`)
+            console.log(`pollfordownload.js DOWNLOADING QUERY ID: ${queryId}`, `TIMEFRAME: ${timeframe}`)
             return await downloadPNG(queryId, timeframe, token);
         }
 

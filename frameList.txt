@@ -1,2 +1,0 @@
-file './frames/frame_1945.png'
-file './frames/frame_1946.png'
