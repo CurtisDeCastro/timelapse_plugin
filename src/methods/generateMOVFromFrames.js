@@ -8,13 +8,9 @@ ffmpeg.setFfmpegPath(ffmpegPath);
 async function generateMOVFromFrames(outputPath, times) {
     const frameListAbsolutePath = path.resolve('./public/media/assets/frameList.txt')
 
-    // const frameListPath = '../../public/media/assets/frameList.txt';
-    // const frameListPath = './public/media/assets/frameList.txt';
-
     const framePaths = times.map((time) => {
         let frameAbsolutePath = path.resolve(`./public/media/frames/frame_${time}.png`);
         let pathName = `file '${frameAbsolutePath}'`;
-        console.log("generateMOV - pathName", pathName);
         return pathName;
     }).join('\n');
     await fs.writeFile(frameListAbsolutePath, framePaths).then(() => console.log("SUCCESSFULLY UPDATED frameList.txt"));

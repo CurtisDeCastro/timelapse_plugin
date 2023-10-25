@@ -1,1 +1,1 @@
-file '/Users/curtisdecastro/Projects/timelapse-plugin/public/media/frames/frame_1970.png'
+file '/Users/curtisdecastro/Projects/timelapse-plugin/public/media/frames/frame_1982.png'
