@@ -2,9 +2,10 @@ const checkDownloadStatus = require('./checkDownloadStatus.js');
 const downloadPNG = require('./downloadPNG.js');
 
 // Polling function for downloadPNG
-async function pollForDownload(queryId, timeframe, token, maxAttempts = 300, interval = 1000) {
+async function pollForDownload(queryId, timeframe, token, maxAttempts = 1000, interval = 1000) {
     for (let i = 0; i < maxAttempts; i++) {
         let status = await checkDownloadStatus(queryId, token);
+        console.log(status);
 
         if (status === 200) {
             console.log(`pollfordownload.js DOWNLOADING QUERY ID: ${queryId}`, `TIMEFRAME: ${timeframe}`)

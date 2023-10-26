@@ -39,6 +39,16 @@ const App = () => {
     const [videoState, setVideoState] = useState({ src: videoSource, generated: false });
 
     useEffect(() => {
+      fetch('http://localhost:3001/get-video-source')
+          .then(response => response.text())
+          .then(data => {
+              setVideoState({ src: data, generated: true });
+          })
+          .catch(error => console.error('Error fetching the file:', error));
+  }, []);
+
+
+    useEffect(() => {
         console.log("video source: ", videoState.src);
         console.log("video generated?", videoState.generated);
       }, [videoState.src, videoState.generated]);
@@ -90,6 +100,18 @@ const App = () => {
             />
           </div>
       )
+    } else if (!times && videoState.src) {
+     return(
+      <div>
+        <CustomPlayer 
+          url={videoState.src} 
+          playing={true} 
+          controls={true} 
+          width='100%' 
+          height='100%'
+        />
+      </div>
+    ) 
     } else {
       return (<text>Loading...</text>)
     }
