@@ -3,6 +3,13 @@ import ReactPlayer from 'react-player';
 import './styles/CustomPlayer.css';
 
 function CustomPlayer(props) {
+  CustomPlayer.defaultProps = {
+    metaData: {
+      frameCount: 0
+      // You can add other default properties for metaData here
+    }
+  };
+
   const { url, metaData } = props;
   const [playing, setPlaying] = useState(false);
   const [played, setPlayed] = useState(0);
@@ -11,9 +18,20 @@ function CustomPlayer(props) {
   const [loop, setLoop] = useState(false);
   const [playbackRate, setPlaybackRate] = useState(1);
   const [showIcon, setShowIcon] = useState(false);
+  const [hoverTimeout, setHoverTimeout] = useState(null);
+  const [progressInterval, setProgressInterval] = useState(1000);
   const playerRef = useRef(null);
 
   const playbackRates = [0.5, 0.75, 1, 1.25, 1.5, 2];
+
+  useEffect(() => {
+    if (duration && metaData && metaData.frameCount) {
+      const frameDuration = duration / metaData.frameCount;
+      setProgressInterval(frameDuration * 1000);
+    } else {
+      setProgressInterval(100); // Default value
+    }
+  }, [duration, metaData]);
 
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -46,9 +64,14 @@ function CustomPlayer(props) {
     };
   }, [playbackRate]);
 
-  const handleProgress = (state) => {
-    setPlayed(state.played);
-  };
+  useEffect(() => {
+    if (duration && metaData.frameCount) {
+      const frameDuration = duration / metaData.frameCount;
+      setProgressInterval(frameDuration * 1000);
+    } else {
+      setProgressInterval(100);
+    }
+  }, [duration, metaData]);
 
   const handleDuration = (value) => {
     setDuration(value);
@@ -57,12 +80,26 @@ function CustomPlayer(props) {
   const handleSeekChange = (e) => {
     const value = parseFloat(e.target.value);
     console.log(`duration: ${duration}, value: ${value}`);
-    if (value > 0.99) {
-        setPlayed(1); // If the value is very close to the end
-        playerRef.current.seekTo(duration*.99);
-    } else {
+    
+    if (metaData && metaData.frameCount) {
+      const frameNumber = Math.floor(value * metaData.frameCount);
+      if (frameNumber === metaData.frameCount - 1) { // Last frame
+        const lastFrameDuration = duration / metaData.frameCount;
+        const timeForLastFrame = duration - lastFrameDuration;
+        setPlayed(timeForLastFrame / duration);
+        playerRef.current.seekTo(timeForLastFrame, "seconds");
+      } else {
         setPlayed(value);
-        playerRef.current.seekTo(value * duration);
+        playerRef.current.seekTo(value * duration, "seconds");
+      }
+    }
+    // Calculate which frame the current value corresponds to
+
+  };
+  
+  const handleProgress = (state) => {
+    if (state.played < 0.99) { // Prevents played from being 1
+      setPlayed(state.played);
     }
   };
 
@@ -72,11 +109,28 @@ function CustomPlayer(props) {
     setTimeout(() => setShowIcon(false), 1500);
   };
 
+  const showControls = () => {
+    setHovered(true);
+    if (hoverTimeout) {
+        clearTimeout(hoverTimeout);
+    }
+
+    // Hide the controls after 2 seconds of mouse inactivity
+    const timeout = setTimeout(() => {
+        setHovered(false);
+    }, 1500);
+
+    setHoverTimeout(timeout);
+  };
+
+  useEffect(() => {
+    console.log("Current played value:", played);
+  }, [played]);
+
   return (
     <div 
       style={{ position: 'relative', paddingBottom: '56.25%', height: 0, width: '100%' }}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
+      onMouseMove={showControls} // Detect mouse movements here
     >
       <ReactPlayer
         ref={playerRef}
@@ -84,6 +138,7 @@ function CustomPlayer(props) {
         playing={playing}
         controls={false}
         onProgress={handleProgress}
+        progressInterval={progressInterval}
         width="100%"
         height="100%"
         style={{ position: 'absolute', top: 0, left: 0 }}

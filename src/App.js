@@ -65,19 +65,6 @@ const App = () => {
       setVideoState({ src: path.split('public')[1], generated: true });
   };
 
-    // if (!videoState.Generated && times) {
-    //   return (
-    //     <VideoGenerator
-    //       times={times} 
-    //       clientId={clientId}
-    //       clientSecret={clientSecret}
-    //       workbookId={workbookId}
-    //       elementId={elementId}
-    //       endpointUrl={endpointUrl}
-    //       handleVideoSrcUpdate={handleVideoSrcUpdate}
-    //     />
-    //   )
-    // }
     if (times) {
       return (
         <div style={{ width: '100%', height: '100%' }}>
