@@ -3,14 +3,10 @@ import ReactPlayer from 'react-player';
 import './styles/CustomPlayer.css';
 
 function CustomPlayer(props) {
-  CustomPlayer.defaultProps = {
-    metaData: {
-      frameCount: 0
-      // You can add other default properties for metaData here
-    }
-  };
-
+  // Destructure props
   const { url, metaData } = props;
+
+  // State declarations
   const [playing, setPlaying] = useState(false);
   const [played, setPlayed] = useState(0);
   const [duration, setDuration] = useState(0);
@@ -20,10 +16,14 @@ function CustomPlayer(props) {
   const [showIcon, setShowIcon] = useState(false);
   const [hoverTimeout, setHoverTimeout] = useState(null);
   const [progressInterval, setProgressInterval] = useState(1000);
+
+  // References
   const playerRef = useRef(null);
 
+  // Constants
   const playbackRates = [0.5, 0.75, 1, 1.25, 1.5, 2];
 
+  // Calculate progress interval based on metadata and duration
   useEffect(() => {
     if (duration && metaData && metaData.frameCount) {
       const frameDuration = duration / metaData.frameCount;
@@ -33,6 +33,7 @@ function CustomPlayer(props) {
     }
   }, [duration, metaData]);
 
+  // Keyboard controls
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.code === "Space") {
@@ -40,19 +41,14 @@ function CustomPlayer(props) {
         e.preventDefault();
       }
 
-      if (e.code === "ArrowUp") {
-        const currentRateIndex = playbackRates.indexOf(playbackRate);
-        if (currentRateIndex < playbackRates.length - 1) {
-          setPlaybackRate(playbackRates[currentRateIndex + 1]);
-        }
+      const currentRateIndex = playbackRates.indexOf(playbackRate);
+      if (e.code === "ArrowUp" && currentRateIndex < playbackRates.length - 1) {
+        setPlaybackRate(playbackRates[currentRateIndex + 1]);
         e.preventDefault();
       }
 
-      if (e.code === "ArrowDown") {
-        const currentRateIndex = playbackRates.indexOf(playbackRate);
-        if (currentRateIndex > 0) {
-          setPlaybackRate(playbackRates[currentRateIndex - 1]);
-        }
+      if (e.code === "ArrowDown" && currentRateIndex > 0) {
+        setPlaybackRate(playbackRates[currentRateIndex - 1]);
         e.preventDefault();
       }
     };
@@ -64,15 +60,12 @@ function CustomPlayer(props) {
     };
   }, [playbackRate]);
 
+  // Debugging purposes
   useEffect(() => {
-    if (duration && metaData.frameCount) {
-      const frameDuration = duration / metaData.frameCount;
-      setProgressInterval(frameDuration * 1000);
-    } else {
-      setProgressInterval(100);
-    }
-  }, [duration, metaData]);
+    console.log("Current played value:", played);
+  }, [played]);
 
+  // Handlers
   const handleDuration = (value) => {
     setDuration(value);
   };
@@ -93,10 +86,8 @@ function CustomPlayer(props) {
         playerRef.current.seekTo(value * duration, "seconds");
       }
     }
-    // Calculate which frame the current value corresponds to
-
   };
-  
+
   const handleProgress = (state) => {
     if (state.played < 0.99) { // Prevents played from being 1
       setPlayed(state.played);
@@ -112,20 +103,15 @@ function CustomPlayer(props) {
   const showControls = () => {
     setHovered(true);
     if (hoverTimeout) {
-        clearTimeout(hoverTimeout);
+      clearTimeout(hoverTimeout);
     }
 
-    // Hide the controls after 2 seconds of mouse inactivity
     const timeout = setTimeout(() => {
-        setHovered(false);
+      setHovered(false);
     }, 1500);
 
     setHoverTimeout(timeout);
   };
-
-  useEffect(() => {
-    console.log("Current played value:", played);
-  }, [played]);
 
   return (
     <div 
@@ -208,5 +194,13 @@ function CustomPlayer(props) {
     </div>
   );
 }
+
+// Default props for the CustomPlayer component
+CustomPlayer.defaultProps = {
+  metaData: {
+    frameCount: 0
+    // Other default properties for metaData can be added here
+  }
+};
 
 export default CustomPlayer;
