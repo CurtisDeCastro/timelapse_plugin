@@ -24,7 +24,7 @@ async function generateMOVFromFrames(outputPath, times) {
             .videoCodec('libx264')  // Using the x264 codec for .mov format
             .toFormat('mp4')
             .on('end', resolve)
-            .on('stderr', console.error)
+            // .on('stderr', console.error)
             .on('error', (err) => {
                 console.error("FFmpeg error:", err);
                 reject(err);

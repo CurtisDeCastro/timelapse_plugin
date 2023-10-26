@@ -66,17 +66,28 @@ const App = () => {
   };
 
     if (times) {
+      let videoGeneratorProps = {
+        times: times.sort((a, b) => a - b), 
+        clientId: clientId,
+        clientSecret: clientSecret,
+        workbookId: workbookId,
+        elementId: elementId,
+        endpointUrl: endpointUrl,
+        handleVideoSrcUpdate: handleVideoSrcUpdate,
+      };
       return (
         <div style={{ width: '100%', height: '100%' }}>
-            <VideoGenerator
-              times={times.sort((a, b) => a - b)} 
-              clientId={clientId}
-              clientSecret={clientSecret}
-              workbookId={workbookId}
-              elementId={elementId}
-              endpointUrl={endpointUrl}
-              handleVideoSrcUpdate={handleVideoSrcUpdate}
-            />
+            {videoState.src.length < 1 ?
+              <VideoGenerator
+                times={times.sort((a, b) => a - b)} 
+                clientId={clientId}
+                clientSecret={clientSecret}
+                workbookId={workbookId}
+                elementId={elementId}
+                endpointUrl={endpointUrl}
+                handleVideoSrcUpdate={handleVideoSrcUpdate}
+              /> : null
+            }
             <CustomPlayer 
               url={videoState.src} 
               playing={true} 
@@ -84,6 +95,7 @@ const App = () => {
               width='100%' 
               height='100%'
               metaData={{frameCount: times.length, frameRange: [times[0], times[times.length-1]]}}
+              videoGeneratorProps={videoGeneratorProps}
             />
           </div>
       )

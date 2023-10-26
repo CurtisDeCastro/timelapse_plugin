@@ -1,10 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
 import ReactPlayer from 'react-player';
+import VideoGenerator from "./videoGenerator.js";
 import './styles/CustomPlayer.css';
 
 function CustomPlayer(props) {
   // Destructure props
-  const { url, metaData } = props;
+  const { url, metaData, videoGeneratorProps } = props;
 
   // State declarations
   const [playing, setPlaying] = useState(false);
@@ -132,7 +133,6 @@ function CustomPlayer(props) {
         playbackRate={playbackRate}
         onDuration={handleDuration}
       />
-
       {/* Overlay Div */}
       <div 
         style={{
@@ -140,7 +140,7 @@ function CustomPlayer(props) {
           top: 0,
           left: 0,
           width: '100%',
-          height: 'calc(100% - 50px)',  // Assuming controls height is approximately 50px
+          height: '100%',  // Assuming controls height is approximately 50px
           cursor: 'pointer'
         }}
         onClick={togglePlayPause}
@@ -189,6 +189,7 @@ function CustomPlayer(props) {
           onChange={handleSeekChange}
           style={{ flexGrow: 1, margin: '0 16px' }}
         />
+        {url && <VideoGenerator {...videoGeneratorProps} />}
         <a href={url} target="_blank" rel="noopener noreferrer">Download</a>
       </div>
     </div>

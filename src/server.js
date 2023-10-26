@@ -18,6 +18,7 @@ const generateMOVFromFrames = require('./methods/generateMOVFromFrames.js');
 // async function Main(times, clientId, clientSecret, endpointUrl) {
 
 async function generateTimelapseFromWorkbookData(props) {
+
     let { times, clientId, clientSecret, workbookId, elementId, endpointUrl } = props;
 
     times = times.sort((a, b) => a - b);

@@ -1,5 +1,6 @@
 const axios = require('axios');
 const fs = require('fs').promises;
+const path = require('path');
 
 async function downloadPNG(queryId, timeframe, sessionToken) {
     let config = {
@@ -16,6 +17,7 @@ async function downloadPNG(queryId, timeframe, sessionToken) {
     try {
       const response = await axios.request(config);
       const imageBuffer = Buffer.from(response.data);
+      
       await fs.writeFile(`./public/media/frames/frame_${timeframe}.png`, imageBuffer);
       console.log(`downloadPNG.js - Frame ${timeframe} downloaded and saved.`);
     } catch (error) {
