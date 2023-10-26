@@ -1,3 +1,4 @@
+file '/Users/curtisdecastro/Projects/timelapse-plugin/public/media/frames/frame_1968.png'
+file '/Users/curtisdecastro/Projects/timelapse-plugin/public/media/frames/frame_1969.png'
 file '/Users/curtisdecastro/Projects/timelapse-plugin/public/media/frames/frame_1970.png'
 file '/Users/curtisdecastro/Projects/timelapse-plugin/public/media/frames/frame_1971.png'
-file '/Users/curtisdecastro/Projects/timelapse-plugin/public/media/frames/frame_1972.png'
