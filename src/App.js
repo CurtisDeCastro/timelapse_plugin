@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import ReactPlayer from 'react-player';
 import CustomPlayer from './components/customPlayer.js';
 import VideoGenerator from "./components/videoGenerator.js";
 // import './App.css';
@@ -35,7 +34,7 @@ const App = () => {
         videoSource: client.config.getKey('Video Source'),
     }
 
-    const {times, clientId, clientSecret, workbookId, elementId, endpointUrl, videoSource } = workbookParams;
+    let {times, clientId, clientSecret, workbookId, elementId, endpointUrl, videoSource } = workbookParams;
 
     const [videoState, setVideoState] = useState({ src: videoSource, generated: false });
 
@@ -73,7 +72,7 @@ const App = () => {
       return (
         <div style={{ width: '100%', height: '100%' }}>
             <VideoGenerator
-              times={times} 
+              times={times.sort((a, b) => a - b)} 
               clientId={clientId}
               clientSecret={clientSecret}
               workbookId={workbookId}
@@ -87,7 +86,7 @@ const App = () => {
               controls={true} 
               width='100%' 
               height='100%'
-              stepValue={times.length+1}
+              metaData={{frameCount: times.length, frameRange: [times[0], times[times.length-1]]}}
             />
           </div>
       )

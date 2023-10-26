@@ -1,0 +1,21 @@
+/* CustomPlayer.css */
+.controls-container {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #2fb2af;
+    padding: 10px;
+    box-sizing: border-box;
+    opacity: 0;
+    visibility: visible;
+    transition: opacity 0.75s none;
+}
+
+.controls-container.hovered {
+    opacity: 1;
+    visibility: visible;
+    transition: opacity 1s ease-in-out;
+}

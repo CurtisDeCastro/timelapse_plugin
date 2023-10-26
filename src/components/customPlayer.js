@@ -1,8 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
 import ReactPlayer from 'react-player';
+import './styles/CustomPlayer.css';
 
 function CustomPlayer(props) {
-  const { url } = props;
+  const { url, metaData } = props;
   const [playing, setPlaying] = useState(false);
   const [played, setPlayed] = useState(0);
   const [duration, setDuration] = useState(0);
@@ -55,8 +56,14 @@ function CustomPlayer(props) {
 
   const handleSeekChange = (e) => {
     const value = parseFloat(e.target.value);
-    setPlayed(value);
-    playerRef.current.seekTo(value * duration);
+    console.log(`duration: ${duration}, value: ${value}`);
+    if (value > 0.99) {
+        setPlayed(1); // If the value is very close to the end
+        playerRef.current.seekTo(duration*.99);
+    } else {
+        setPlayed(value);
+        playerRef.current.seekTo(value * duration);
+    }
   };
 
   const togglePlayPause = () => {
@@ -109,22 +116,14 @@ function CustomPlayer(props) {
           color: 'white',
           opacity: 0.7
         }}>
-          {playing ? '❚❚' : '▶'}
+          {playing ? '▶❚❚' : '❚❚'}
         </div>
       )}
 
       <div 
-        style={{ 
-          position: 'absolute', 
-          bottom: 0, 
-          width: '100%', 
-          display: hovered ? 'flex' : 'none', 
-          justifyContent: 'space-between', 
-          alignItems: 'center',
-          backgroundColor: 'rgba(0, 0, 0, 0.6)', 
-          padding: '10px',
-          boxSizing: 'border-box'
-        }}
+        className={`controls-container ${hovered ? 'hovered' : ''}`}
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
       >
         <button onClick={(e) => { setPlaying(!playing); e.currentTarget.blur(); }}>
           {playing ? "Pause" : "Play"}
