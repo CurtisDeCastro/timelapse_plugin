@@ -169,7 +169,10 @@ function CustomPlayer(props) {
         <button onClick={(e) => { setPlaying(!playing); e.currentTarget.blur(); }}>
           {playing ? "Pause" : "Play"}
         </button>
-        <button onClick={(e) => { setLoop(!loop); e.currentTarget.blur(); }}>
+        <button 
+          style={{ backgroundColor: loop ? '#007BFF' : '#CCCCCC', color: loop ? 'white' : 'black' }}
+          onClick={(e) => { setLoop(!loop); setPlaying(!loop); e.currentTarget.blur(); }}
+        >
           {loop ? "Unloop" : "Loop"}
         </button>
         <label style={{ margin: '0 16px' }}>
