@@ -193,7 +193,9 @@ function CustomPlayer(props) {
           style={{ flexGrow: 1, margin: '0 16px' }}
         />
         {url && <VideoGenerator {...videoGeneratorProps} />}
-        <a href={url} target="_blank" rel="noopener noreferrer">Download</a>
+        <a href={url} target="_blank" rel="noopener noreferrer" download={`${url.split('videos/')[1]}`}>
+          Download
+        </a>
       </div>
     </div>
   );

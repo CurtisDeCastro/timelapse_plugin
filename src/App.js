@@ -16,6 +16,7 @@ client.config.configureEditorPanel([
   { name: 'Client ID*', type: 'text', secure: true},
   { name: 'Workbook ID*', type: 'text'},
   { name: 'Element ID (optional)', type: 'text'},
+  { name: 'Background Color Hex (optional)', type: 'text'},
   { name: 'Endpoint URL*', type: 'text'},
   { name: 'Video Source', type: 'text'},
 ]);
@@ -32,9 +33,10 @@ const App = () => {
         elementId: client.config.getKey("Element ID (optional)"),
         endpointUrl: client.config.getKey("Endpoint URL*"),
         videoSource: client.config.getKey('Video Source'),
+        backgroundColorHex: client.config.getKey('Background Color Hex (optional)'),
     }
 
-    let {times, clientId, clientSecret, workbookId, elementId, endpointUrl, videoSource } = workbookParams;
+    let {times, clientId, clientSecret, workbookId, elementId, endpointUrl, videoSource, backgroundColorHex } = workbookParams;
 
     const [videoState, setVideoState] = useState({ src: videoSource, generated: false });
 
@@ -76,7 +78,7 @@ const App = () => {
         handleVideoSrcUpdate: handleVideoSrcUpdate,
       };
       return (
-        <div style={{ width: '100%', height: '100%' }}>
+        <div style={{ width: '100%', height: '100%', background: backgroundColorHex ? backgroundColorHex : 'transparent'}}>
             {videoState.src.length < 1 ?
               <VideoGenerator
                 times={times.sort((a, b) => a - b)} 
