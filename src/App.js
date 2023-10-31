@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import CustomPlayer from './components/customPlayer.js';
 import VideoGenerator from "./components/videoGenerator.js";
-// import './App.css';
 
 import {
 	client,
@@ -41,13 +40,15 @@ const App = () => {
     const [videoState, setVideoState] = useState({ src: videoSource, generated: false });
 
     useEffect(() => {
-      fetch('http://localhost:3001/get-video-source')
-          .then(response => response.text())
-          .then(data => {
-              setVideoState({ src: data, generated: true });
-          })
-          .catch(error => console.error('Error fetching the file:', error));
-  }, []);
+      if (!videoSource) {
+        fetch('http://localhost:3001/get-video-source')
+        .then(response => response.text())
+        .then(data => {
+            setVideoState({ src: data, generated: true });
+        })
+        .catch(error => console.error('Error fetching the file:', error));
+      }
+    }, [videoSource]);
 
 
     useEffect(() => {
@@ -105,7 +106,7 @@ const App = () => {
      return(
       <div>
         <CustomPlayer 
-          url={videoState.src} 
+          url={videoState.src}
           playing={true} 
           controls={true} 
           width='100%' 

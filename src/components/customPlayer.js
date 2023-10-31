@@ -192,10 +192,10 @@ function CustomPlayer(props) {
           onChange={handleSeekChange}
           style={{ flexGrow: 1, margin: '0 16px' }}
         />
-        {url && <VideoGenerator {...videoGeneratorProps} />}
         <a href={url} target="_blank" rel="noopener noreferrer" download={`${url.split('videos/')[1]}`}>
           Download
         </a>
+        {url && <VideoGenerator {...videoGeneratorProps} />}
       </div>
     </div>
   );
