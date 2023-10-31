@@ -14,7 +14,12 @@ function VideoGenerator(props) {
 
   return (
       <div>
-          <button onClick={handleGenerateVideo}>Generate Video</button>
+          <button 
+            className="btn btn-outline-light" 
+            onClick={handleGenerateVideo}
+          >
+            <i className="fas fa-video" />
+          </button>
       </div>
   );
 }

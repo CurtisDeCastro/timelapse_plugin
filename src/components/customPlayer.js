@@ -1,7 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
 import ReactPlayer from 'react-player';
 import VideoGenerator from "./videoGenerator.js";
+import PlayerOverlayDiv from "./PlayerOverlayDiv.js";
 import './styles/CustomPlayer.css';
+
+import 'bootstrap/dist/css/bootstrap.min.css';
+import '@fortawesome/fontawesome-free/css/all.min.css';
 
 function CustomPlayer(props) {
   // Destructure props
@@ -17,6 +21,8 @@ function CustomPlayer(props) {
   const [showIcon, setShowIcon] = useState(false);
   const [hoverTimeout, setHoverTimeout] = useState(null);
   const [progressInterval, setProgressInterval] = useState(1000);
+  const [volume, setVolume] = useState(0.8);
+  const [showVolumeControl, setShowVolumeControl] = useState(false); // Add this line
 
   // References
   const playerRef = useRef(null);
@@ -33,6 +39,17 @@ function CustomPlayer(props) {
       setProgressInterval(100); // Default value
     }
   }, [duration, metaData]);
+
+    // ... useEffect to auto-hide the volume control ...
+  useEffect(() => {
+    let timeout;
+    if (showVolumeControl) {
+      timeout = setTimeout(() => setShowVolumeControl(false), 3000);
+    }
+    return () => {
+      clearTimeout(timeout);
+    };
+  }, [showVolumeControl]);
 
   // Keyboard controls
   useEffect(() => {
@@ -59,7 +76,7 @@ function CustomPlayer(props) {
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
     };
-  }, [playbackRate]);
+  }, [playbackRate, playbackRates]);
 
   // Debugging purposes
   useEffect(() => {
@@ -117,7 +134,7 @@ function CustomPlayer(props) {
   return (
     <div 
       style={{ position: 'relative', paddingBottom: '56.25%', height: 0, width: '100%' }}
-      onMouseMove={showControls} // Detect mouse movements here
+      onMouseMove={showControls}
     >
       <ReactPlayer
         ref={playerRef}
@@ -132,57 +149,60 @@ function CustomPlayer(props) {
         loop={loop}
         playbackRate={playbackRate}
         onDuration={handleDuration}
+        volume={volume}
       />
-      {/* Overlay Div */}
+      <PlayerOverlayDiv onClick={togglePlayPause} playing={playing} showIcon={showIcon} />
       <div 
-        style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          width: '100%',
-          height: '100%',  // Assuming controls height is approximately 50px
-          cursor: 'pointer'
-        }}
-        onClick={togglePlayPause}
-      ></div>
-
-      {/* Play/Pause Icon */}
-      {showIcon && (
-        <div style={{
-          position: 'absolute',
-          top: '50%',
-          left: '50%',
-          transform: 'translate(-50%, -50%)',
-          fontSize: '3em',
-          color: 'white',
-          opacity: 0.7
-        }}>
-          {playing ? '▶❚❚' : '❚❚'}
-        </div>
-      )}
-
-      <div 
-        className={`controls-container ${hovered ? 'hovered' : ''}`}
+        className={`controls-container d-flex align-items-center justify-content-between ${hovered ? 'hovered' : ''}`}
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}
+        style={{ position: 'absolute', bottom: 0, width: '100%', background: 'rgba(0, 0, 0, 0.5)', padding: '20px 20px' }}
       >
-        <button onClick={(e) => { setPlaying(!playing); e.currentTarget.blur(); }}>
-          {playing ? "Pause" : "Play"}
+        <button className="btn btn-outline-light" onClick={(e) => { setPlaying(!playing); e.currentTarget.blur(); }}>
+          {playing ? <i className="fas fa-pause"></i> : <i className="fas fa-play"></i>}
         </button>
         <button 
-          style={{ backgroundColor: loop ? '#007BFF' : '#CCCCCC', color: loop ? 'white' : 'black' }}
+          className={`btn ${loop ? 'btn-primary' : 'btn-outline-light'}`}
           onClick={(e) => { setLoop(!loop); setPlaying(!loop); e.currentTarget.blur(); }}
         >
-          {loop ? "Unloop" : "Loop"}
+          <i className="fas fa-redo-alt"></i>
         </button>
-        <label style={{ margin: '0 16px' }}>
-          Speed:
-          <select value={playbackRate} onChange={(e) => setPlaybackRate(parseFloat(e.target.value))}>
+        <div className="mx-3 d-flex align-items-center">
+          <select className="custom-select btn-outline-light" style={{borderColor: 'white', color: 'white', backgroundColor: 'transparent'}} value={playbackRate} onChange={(e) => setPlaybackRate(parseFloat(e.target.value))}>
             {playbackRates.map(rate => (
               <option key={rate} value={rate}>{rate}x</option>
             ))}
           </select>
-        </label>
+        </div>
+        <div className="mx-3 d-flex align-items-center position-relative">
+          <button className="btn btn-outline-light" onClick={() => setShowVolumeControl(!showVolumeControl)}>
+            <i className="fas fa-volume-up"></i>
+          </button>
+          {showVolumeControl && (
+            <div style={{
+              position: 'absolute',
+              left: '50%',
+              bottom: '100%',
+              marginLeft: '-50px',
+              marginBottom: '10px',
+              padding: '5px',
+              backgroundColor: 'white',
+              borderRadius: '5px',
+              boxShadow: '0px 0px 10px rgba(0, 0, 0, 0.5)'
+            }}>
+              <input
+                type="range"
+                min={0}
+                max={1}
+                step="any"
+                value={volume}
+                onChange={(e) => setVolume(parseFloat(e.target.value))}
+                className="custom-range"
+                style={{ width: '100px' }}
+              />
+            </div>
+          )}
+        </div>
         <input
           type="range"
           min={0}
@@ -191,11 +211,12 @@ function CustomPlayer(props) {
           value={played}
           onChange={handleSeekChange}
           style={{ flexGrow: 1, margin: '0 16px' }}
+          className="custom-range"
         />
-        <a href={url} target="_blank" rel="noopener noreferrer" download={`${url.split('videos/')[1]}`}>
-          Download
-        </a>
         {url && <VideoGenerator {...videoGeneratorProps} />}
+        <a href={url} target="_blank" rel="noopener noreferrer" className="btn btn-outline-light" download>
+          <i className="fas fa-download"></i>
+        </a>
       </div>
     </div>
   );
