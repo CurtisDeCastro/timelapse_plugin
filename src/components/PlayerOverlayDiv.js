@@ -22,7 +22,14 @@ function PlayerOverlayDiv(props) {
           transform: 'translate(-50%, -50%)',
           fontSize: '3em',
           color: 'white',
-          opacity: 0.7
+          opacity: 0.7,
+          width: '2em',
+          height: '2em',
+          display: 'flex',              // Added to make this a flex container
+          alignItems: 'center', 
+          justifyContent: 'center',
+          borderRadius: '10px', // This will give you rounded corners. Adjust the px value to your preference
+          backgroundColor: 'rgba(128, 128, 128, 0.6)'
         }}>
           {playing ? '▶❚❚' : '❚❚'}
         </div>
