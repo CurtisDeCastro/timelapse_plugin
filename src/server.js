@@ -7,10 +7,43 @@ app.use(bodyParser.json());
 app.use(cors({origin: 'http://localhost:3000'}));
 const fs = require('fs');
 const path = require('path');
+const AWS = require('aws-sdk');
 
 // Import custom methods
 const clearDirectory = require('./methods/clearDirectory.js');
 const generateTimelapseFromWorkbookData = require('./methods/generateTimelapseFromWorkbookData.js');
+
+
+app.post('/generate-presigned-url', async (req, res) => {
+    res.header("Access-Control-Allow-Origin", "http://localhost:3000");
+    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+    res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE');
+    try {
+      const { accessKey, secretKey, bucketName, region, workbookId, nodeId, fileName } = req.body;
+  
+      const s3 = new AWS.S3({
+        accessKeyId: accessKey,
+        secretAccessKey: secretKey,
+        region: region,
+      });
+  
+      const params = {
+        Bucket: bucketName,
+        Key: `${workbookId}/${fileName}`,  // or any other filename
+        ContentType: 'video/mp4',
+        ACL: 'public-read',  // Adjust as needed
+      };
+
+      if(nodeId) {
+        params.Key = `${workbookId}/${nodeId}/${fileName}`;
+      };
+  
+      const presignedUrl = await s3.getSignedUrlPromise('putObject', params);
+      res.json({ url: presignedUrl });
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+});
 
 app.get('/get-video-source', (req, res) => {
     const filePath = path.join(__dirname, '../public/media/assets/VideoSourcePath.txt');

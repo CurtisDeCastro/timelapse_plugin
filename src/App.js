@@ -10,7 +10,9 @@ import {
 
 client.config.configureEditorPanel([
 	{ name: "source", type: "element" },
-	{ name: "Timeframe", type: "column", source: "source", allowMultiple: false, allowedTypes: ['boolean', 'datetime', 'number', 'integer', 'text', 'variant', 'link', 'error'] },
+	{ name: "Timeframe", type: "column", source: "source", allowMultiple: false, allowedTypes: [
+    'boolean', 'datetime', 'number', 'integer', 'text', 'variant', 'link', 'error'
+  ] },
   { name: 'Client Secret*', type: 'text', secure: true},
   { name: 'Client ID*', type: 'text', secure: true},
   { name: 'Workbook ID*', type: 'text'},
@@ -18,6 +20,10 @@ client.config.configureEditorPanel([
   { name: 'Background Color Hex (optional)', type: 'text'},
   { name: 'Endpoint URL*', type: 'text'},
   { name: 'Video Source', type: 'text'},
+  { name: 'AWS Access Key', type: 'text', secure: true },
+  { name: 'AWS Secret Key', type: 'text', secure: true },
+  { name: 'S3 Bucket Name', type: 'text' },
+  { name: 'AWS Region', type: 'text' },
 ]);
 
 const App = () => {
@@ -33,9 +39,26 @@ const App = () => {
         endpointUrl: client.config.getKey("Endpoint URL*"),
         videoSource: client.config.getKey('Video Source'),
         backgroundColorHex: client.config.getKey('Background Color Hex (optional)'),
+        accessKey: client.config.getKey('AWS Access Key'),
+        secretKey: client.config.getKey('AWS Secret Key'),
+        bucketName: client.config.getKey('S3 Bucket Name'),
+        region: client.config.getKey('AWS Region'),
     }
 
-    let {times, clientId, clientSecret, workbookId, elementId, endpointUrl, videoSource, backgroundColorHex } = workbookParams;
+    let {
+      times, 
+      clientId, 
+      clientSecret, 
+      workbookId, 
+      elementId, 
+      endpointUrl, 
+      videoSource, 
+      backgroundColorHex, 
+      accessKey, 
+      secretKey, 
+      bucketName, 
+      region, 
+    } = workbookParams;
 
     const [videoState, setVideoState] = useState({ src: videoSource, generated: false });
 
@@ -69,6 +92,19 @@ const App = () => {
   };
 
     if (times) {
+      const metaData = {
+        frameCount: times.length, 
+        frameRange: [times[0], times[times.length-1]],
+        videoSrc: videoState.src,
+        accessKey,
+        secretKey,
+        bucketName,
+        region,
+        workbookId,
+        nodeId: elementId,
+        fileName: videoState.src.split('/')[videoState.src.split('/').length-1]
+      };
+      console.log(metaData.videoSrc.split('/')[metaData.videoSrc.split('/').length-1])
       let videoGeneratorProps = {
         times: times.sort((a, b) => a - b), 
         clientId: clientId,
@@ -97,7 +133,7 @@ const App = () => {
               controls={true} 
               width='100%' 
               height='100%'
-              metaData={{frameCount: times.length, frameRange: [times[0], times[times.length-1]]}}
+              metaData={metaData}
               videoGeneratorProps={videoGeneratorProps}
             />
           </div>

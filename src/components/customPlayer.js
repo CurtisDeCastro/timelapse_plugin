@@ -1,7 +1,9 @@
+/* eslint-disable jsx-a11y/no-access-key */
 import React, { useState, useRef, useEffect } from 'react';
 import ReactPlayer from 'react-player';
 import VideoGenerator from "./videoGenerator.js";
 import PlayerOverlayDiv from "./PlayerOverlayDiv.js";
+import SaveVideo from './SaveVideo.js';
 import './styles/CustomPlayer.css';
 
 import 'bootstrap/dist/css/bootstrap.min.css';
@@ -131,6 +133,8 @@ function CustomPlayer(props) {
     setHoverTimeout(timeout);
   };
 
+  const { videoSrc, accessKey, secretKey, bucketName, region, workbookId, nodeId, fileName } = metaData;
+
   return (
     <div 
       style={{ position: 'relative', paddingBottom: '56.25%', height: 0, width: '100%' }}
@@ -217,11 +221,21 @@ function CustomPlayer(props) {
         <a href={url} target="_blank" rel="noopener noreferrer" className="btn btn-outline-light" download>
           <i className="fas fa-download"></i>
         </a>
+        <SaveVideo 
+          videoSrc={videoSrc}
+          AwsAccessKey={accessKey}
+          secretKey={secretKey}
+          bucketName={bucketName}
+          region={region}
+          workbookId={workbookId}
+          nodeId={nodeId}
+          fileName={fileName}
+        />
       </div>
     </div>
   );
 }
-
+ 
 // Default props for the CustomPlayer component
 CustomPlayer.defaultProps = {
   metaData: {
