@@ -20,6 +20,9 @@ app.post('/generate-presigned-url', async (req, res) => {
     res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE');
     try {
       const { accessKey, secretKey, bucketName, region, workbookId, nodeId, fileName } = req.body;
+
+      let timestamp = new Date(Date.now()).toISOString();
+      console.log(timestamp);
   
       const s3 = new AWS.S3({
         accessKeyId: accessKey,
@@ -29,7 +32,7 @@ app.post('/generate-presigned-url', async (req, res) => {
   
       const params = {
         Bucket: bucketName,
-        Key: `${workbookId}/${fileName}`,  // or any other filename
+        Key: `${workbookId}/${fileName.split('.')[0].replace(' ','_')+'_('+timestamp+').'+fileName.split('.')[1]}`,  // or any other filename
         ContentType: 'video/mp4',
         ACL: 'public-read',  // Adjust as needed
       };
