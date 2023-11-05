@@ -29,16 +29,18 @@ app.post('/generate-presigned-url', async (req, res) => {
         secretAccessKey: secretKey,
         region: region,
       });
+
+      const filenameWithTimestamp =  fileName.split('.')[0].replace(' ','_')+'_('+timestamp+').'+fileName.split('.')[1];
   
       const params = {
         Bucket: bucketName,
-        Key: `${workbookId}/${fileName.split('.')[0].replace(' ','_')+'_('+timestamp+').'+fileName.split('.')[1]}`,  // or any other filename
+        Key: `${workbookId}/${filenameWithTimestamp}`,  // or any other filename
         ContentType: 'video/mp4',
         ACL: 'public-read',  // Adjust as needed
       };
 
       if(nodeId) {
-        params.Key = `${workbookId}/${nodeId}/${fileName}`;
+        params.Key = `${workbookId}/${nodeId}/${filenameWithTimestamp}`;
       };
   
       const presignedUrl = await s3.getSignedUrlPromise('putObject', params);

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import CustomPlayer from './components/customPlayer.js';
 import VideoGenerator from "./components/videoGenerator.js";
+import AWS from 'aws-sdk';
 
 import {
 	client,
@@ -61,6 +62,48 @@ const App = () => {
     } = workbookParams;
 
     const [videoState, setVideoState] = useState({ src: videoSource, generated: false });
+
+    useEffect(() => {
+      const fetchVideos = async () => {
+        // Set up AWS credentials
+        AWS.config.update({
+          region,
+          accessKeyId: accessKey,
+          secretAccessKey: secretKey,
+        });
+  
+        // Create an S3 client
+        const s3 = new AWS.S3();
+  
+        // Construct the prefix based on WorkbookId and optional NodeId
+        const prefix = `${workbookId}/${elementId ? `${elementId}/` : ''}`;
+  
+        // Define the parameters for listing objects
+        const params = {
+          Bucket: `${bucketName}`,
+          Prefix: prefix,
+        };
+  
+        try {
+          // List objects in the specified S3 bucket and prefix
+          const data = await s3.listObjectsV2(params).promise();
+  
+          // Filter and sort to find the most recently created video
+          const latestVideo = data.Contents.filter(item => item.Key.endsWith('.mp4'))
+                                           .sort((a, b) => b.LastModified - a.LastModified)[0];
+  
+          if (latestVideo) {
+            // Construct the S3 URL and set the state
+            const url = `https://${bucketName}.s3.amazonaws.com/${latestVideo.Key}`;
+            setVideoState({src: url, generated: true});
+          }
+        } catch (err) {
+          console.error('Error fetching videos:', err);
+        }
+      };
+  
+      fetchVideos();
+    }, [workbookId, elementId, accessKey, secretKey, bucketName, region]);
 
     useEffect(() => {
       if (!videoSource) {
