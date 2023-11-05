@@ -20,6 +20,7 @@ const SaveVideo = ({ videoSrc, AwsAccessKey, secretKey, bucketName, region, work
         }),
       });
       const { url } = await response.json();
+      console.log('Presigned URL:', url);
 
       // Fetch the video file from the provided videoSrc
       const videoResponse = await fetch(videoSrc);
@@ -31,6 +32,7 @@ const SaveVideo = ({ videoSrc, AwsAccessKey, secretKey, bucketName, region, work
         body: videoBlob,
         headers: {
           'Content-Type': 'video/mp4',
+          'ACL': 'public-read',  // Adjust as needed
         },
       });
 

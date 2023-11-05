@@ -21,7 +21,8 @@ app.post('/generate-presigned-url', async (req, res) => {
     try {
       const { accessKey, secretKey, bucketName, region, workbookId, nodeId, fileName } = req.body;
 
-      let timestamp = new Date(Date.now()).toISOString();
+      let timestamp = new Date(Date.now()).toISOString().replace(/[:.-]/g, '_');
+
       console.log(timestamp);
   
       const s3 = new AWS.S3({
@@ -30,7 +31,7 @@ app.post('/generate-presigned-url', async (req, res) => {
         region: region,
       });
 
-      const filenameWithTimestamp =  fileName.split('.')[0].replace(' ','_')+'_('+timestamp+').'+fileName.split('.')[1];
+      const filenameWithTimestamp = encodeURIComponent(fileName.split('.')[0].replace(' ', '_') + `_(${timestamp}).mp4`);
   
       const params = {
         Bucket: bucketName,
