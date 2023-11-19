@@ -4,6 +4,7 @@ const app = express();
 const port = 3001; 
 const cors = require('cors');
 app.use(bodyParser.json()); 
+app.use(express.json());
 app.use(cors({origin: 'http://localhost:3000'}));
 const fs = require('fs');
 const path = require('path');
@@ -63,6 +64,56 @@ app.get('/get-video-source', (req, res) => {
         // Send the file contents
         res.send(data);
     });
+});
+
+app.post('/get-latest-video', async (req, res) => {
+
+  const { workbookId, elementId, accessKey, secretKey, bucketName, region } = req.body;
+
+  console.log(req.body)
+
+  // Set up AWS credentials
+  AWS.config.update({
+    region,
+    accessKeyId: accessKey,
+    secretAccessKey: secretKey,
+  });
+
+  // Create an S3 client
+  const s3 = new AWS.S3();
+
+  // Construct the prefix based on WorkbookId and optional NodeId
+  const prefix = `${workbookId}/${elementId ? `${elementId}/` : ''}`;
+
+  // Define the parameters for listing objects
+  const params = {
+    Bucket: bucketName,
+    Prefix: prefix,
+  };
+  if (params.Bucket) {
+    try {
+      console.log(params)
+      // List objects in the specified S3 bucket and prefix
+      const data = await s3.listObjectsV2(params).promise();
+
+      // Filter and sort to find the most recently created video
+      const latestVideo = data.Contents
+                              .filter(item => item.Key.endsWith('.mp4'))
+                              .sort((a, b) => new Date(b.LastModified) - new Date(a.LastModified))[0];
+
+      if (latestVideo) {
+        // Construct the S3 URL
+        const url = `https://${bucketName}.s3.${region}.amazonaws.com/${latestVideo.Key}`;
+        res.json({ src: url, generated: true });
+      } else {
+        res.status(404).json({ error: 'No videos found' });
+      }
+    } catch (err) {
+      console.error('Error fetching videos:', err);
+      res.status(500).json({ error: 'Error fetching videos' });
+    }
+  }
+  
 });
 
 app.post('/generateVideo', async (req, res) => {

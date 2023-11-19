@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import CustomPlayer from './components/customPlayer.js';
 import VideoGenerator from "./components/videoGenerator.js";
 import AWS from 'aws-sdk';
+import axios from 'axios';
 
 import {
 	client,
@@ -61,66 +62,24 @@ const App = () => {
       region, 
     } = workbookParams;
 
-    const [videoState, setVideoState] = useState({ src: videoSource, generated: false });
+    
+    const [videoSrc, setVideoSource] = useState(videoSource);
 
     useEffect(() => {
-      const fetchVideos = async () => {
-        // Set up AWS credentials
-        AWS.config.update({
-          region,
-          accessKeyId: accessKey,
-          secretAccessKey: secretKey,
-        });
-  
-        // Create an S3 client
-        const s3 = new AWS.S3();
-  
-        // Construct the prefix based on WorkbookId and optional NodeId
-        const prefix = `${workbookId}/${elementId ? `${elementId}/` : ''}`;
-  
-        // Define the parameters for listing objects
-        const params = {
-          Bucket: `${bucketName}`,
-          Prefix: prefix,
-        };
-  
-        try {
-          // List objects in the specified S3 bucket and prefix
-          const data = await s3.listObjectsV2(params).promise();
-  
-          // Filter and sort to find the most recently created video
-          const latestVideo = data.Contents.filter(item => item.Key.endsWith('.mp4'))
-                                           .sort((a, b) => b.LastModified - a.LastModified)[0];
-  
-          if (latestVideo) {
-            // Construct the S3 URL and set the state
-            const url = `https://${bucketName}.s3.amazonaws.com/${latestVideo.Key}`;
-            setVideoState({src: url, generated: true});
-          }
-        } catch (err) {
-          console.error('Error fetching videos:', err);
-        }
-      };
-  
-      fetchVideos();
-    }, [workbookId, elementId, accessKey, secretKey, bucketName, region]);
-
-    useEffect(() => {
-      if (!videoSource) {
-        fetch('http://localhost:3001/get-video-source')
-        .then(response => response.text())
-        .then(data => {
-            setVideoState({ src: data, generated: true });
+      if (!videoSource || !validURL(videoSource)) {
+        axios.post('http://localhost:3001/get-latest-video', { workbookId, elementId, accessKey, secretKey, bucketName, region })
+        .then(response => {
+          setVideoSource(response.data.src);
         })
-        .catch(error => console.error('Error fetching the file:', error));
+        .catch(error => {
+          console.error('Error fetching the file:', error);
+        })
       }
-    }, [videoSource]);
-
+    }, [videoSource, workbookId, elementId, accessKey, secretKey, bucketName, region ]);
 
     useEffect(() => {
-        console.log("video source: ", videoState.src);
-        console.log("video generated?", videoState.generated);
-      }, [videoState.src, videoState.generated]);
+        console.log("video source: ", videoSrc);
+      }, [videoSrc]);
 
     useEffect(() => {
         console.log('VideoPlayer mounted');
@@ -131,23 +90,22 @@ const App = () => {
 
     const handleVideoSrcUpdate = (path) => {
       console.log("changing video src to path: ", path.split('public')[1]);
-      setVideoState({ src: path.split('public')[1], generated: true });
+      setVideoSource({ src: path.split('public')[1], generated: true });
   };
 
     if (times) {
       const metaData = {
         frameCount: times.length, 
         frameRange: [times[0], times[times.length-1]],
-        videoSrc: videoState.src,
+        videoSrc: videoSrc,
         accessKey,
         secretKey,
         bucketName,
         region,
         workbookId,
         nodeId: elementId,
-        fileName: videoState.src.split('/')[videoState.src.split('/').length-1]
+        fileName: videoSrc
       };
-      console.log(metaData.videoSrc.split('/')[metaData.videoSrc.split('/').length-1])
       let videoGeneratorProps = {
         times: times.sort((a, b) => a - b), 
         clientId: clientId,
@@ -159,7 +117,7 @@ const App = () => {
       };
       return (
         <div style={{ width: '100%', height: '100%', background: backgroundColorHex ? backgroundColorHex : 'transparent'}}>
-            {videoState.src.length < 1 ?
+            {videoSrc.length < 1 ?
               <VideoGenerator
                 times={times.sort((a, b) => a - b)} 
                 clientId={clientId}
@@ -171,7 +129,7 @@ const App = () => {
               /> : null
             }
             <CustomPlayer 
-              url={videoState.src} 
+              url={videoSrc} 
               playing={true} 
               controls={true} 
               width='100%' 
@@ -181,11 +139,11 @@ const App = () => {
             />
           </div>
       )
-    } else if (!times && videoState.src) {
+    } else if (!times && videoSrc) {
      return(
       <div>
         <CustomPlayer 
-          url={videoState.src}
+          url={videoSrc}
           playing={true} 
           controls={true} 
           width='100%' 
@@ -194,8 +152,18 @@ const App = () => {
       </div>
     ) 
     } else {
-      return (<text>Loading...</text>)
+      return (<p>Loading...</p>)
     }
 };
+
+function validURL(str) {
+  var pattern = new RegExp('^(https?:\\/\\/)?'+ // protocol
+    '((([a-z\\d]([a-z\\d-]*[a-z\\d])*)\\.)+[a-z]{2,}|'+ // domain name
+    '((\\d{1,3}\\.){3}\\d{1,3}))'+ // OR ip (v4) address
+    '(\\:\\d+)?(\\/[-a-z\\d%_.~+]*)*'+ // port and path
+    '(\\?[;&a-z\\d%_.~+=-]*)?'+ // query string
+    '(\\#[-a-z\\d_]*)?$','i'); // fragment locator
+  return !!pattern.test(str);
+}
 
 export default App;
