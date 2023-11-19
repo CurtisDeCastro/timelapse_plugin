@@ -13,8 +13,6 @@ function CustomPlayer(props) {
   // Destructure props
   const { url, metaData, videoGeneratorProps } = props;
 
-  console.log("URL:",url)
-
   // State declarations
   const [playing, setPlaying] = useState(false);
   const [played, setPlayed] = useState(0);

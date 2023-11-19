@@ -114,6 +114,18 @@ const App = () => {
         elementId: elementId,
         endpointUrl: endpointUrl,
         handleVideoSrcUpdate: handleVideoSrcUpdate,
+        s3Config: {
+          accessKey: accessKey,
+          secretKey: secretKey,
+          region: region,
+          bucketName: bucketName,
+          videoSrc: videoSrc,
+          AwsAccessKey: accessKey,
+          nodeId: elementId,
+          fileName: videoSrc,
+          workbookId,
+          elementId,
+        }
       };
       return (
         <div style={{ width: '100%', height: '100%', background: backgroundColorHex ? backgroundColorHex : 'transparent'}}>

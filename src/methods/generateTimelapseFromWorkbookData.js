@@ -1,4 +1,6 @@
 const path = require('path');
+const AWS = require('aws-sdk');
+const fs = require('fs');
 
 // Import custom methods
 const getToken = require('./getToken.js');
@@ -8,7 +10,7 @@ const generateMOVFromFrames = require('./generateMOVFromFrames.js');
 const clearDirectory = require('./clearDirectory.js');
 
 async function generateTimelapseFromWorkbookData(props) {
-    let { times, clientId, clientSecret, workbookId, elementId, endpointUrl } = props;
+    let { times, clientId, clientSecret, workbookId, elementId, endpointUrl, s3Config } = props;
 
     times = times.sort((a, b) => a - b);
 
@@ -41,7 +43,32 @@ async function generateTimelapseFromWorkbookData(props) {
 
     console.log('generateTimelapse function - output path:', outputPath);
 
-    await generateMOVFromFrames(outputPath, times);
+    await generateMOVFromFrames(outputPath, times).then(
+        (result) => {
+            const s3 = new AWS.S3({
+                accessKeyId: s3Config.accessKeyId,
+                secretAccessKey: s3Config.secretAccessKey,
+                region: s3Config.region,
+            });
+
+            const fileContent = fs.readFileSync(outputPath);
+
+            const params = {
+                Bucket: s3Config.bucketName,
+                Key: `${s3Config.workbookId}${s3Config.elementId ? '/' + s3Config.elementId : ''}/timelapse_${Math.min(...times)}-${Math.max(...times)}.mp4`,
+                Body: fileContent,
+                ACL: 'public-read',
+                ContentType: 'video/mp4'
+            };
+
+            s3.upload(params, function(err, data) {
+                if (err) {
+                    throw err;
+                }
+                console.log(`File uploaded successfully. ${data.Location}`);
+            });
+        }
+    )
 
     console.log(`Video has been saved as ${outputPath}`);
     return outputPath;
