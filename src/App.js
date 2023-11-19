@@ -19,7 +19,6 @@ client.config.configureEditorPanel([
   { name: 'Client ID*', type: 'text', secure: true},
   { name: 'Workbook ID*', type: 'text'},
   { name: 'Element ID (optional)', type: 'text'},
-  { name: 'Background Color Hex (optional)', type: 'text'},
   { name: 'Endpoint URL*', type: 'text'},
   { name: 'Video Source', type: 'text'},
   { name: 'AWS Access Key', type: 'text', secure: true },
@@ -40,7 +39,6 @@ const App = () => {
         elementId: client.config.getKey("Element ID (optional)"),
         endpointUrl: client.config.getKey("Endpoint URL*"),
         videoSource: client.config.getKey('Video Source'),
-        backgroundColorHex: client.config.getKey('Background Color Hex (optional)'),
         accessKey: client.config.getKey('AWS Access Key'),
         secretKey: client.config.getKey('AWS Secret Key'),
         bucketName: client.config.getKey('S3 Bucket Name'),
@@ -55,7 +53,6 @@ const App = () => {
       elementId, 
       endpointUrl, 
       videoSource, 
-      backgroundColorHex, 
       accessKey, 
       secretKey, 
       bucketName, 
@@ -128,7 +125,7 @@ const App = () => {
         }
       };
       return (
-        <div style={{ width: '100%', height: '100%', background: backgroundColorHex ? backgroundColorHex : 'transparent'}}>
+        <div style={{ width: '100%', height: '100%', background: 'transparent', marginTop: '0'}}>
             {videoSrc.length < 1 ?
               <VideoGenerator
                 times={times.sort((a, b) => a - b)} 
@@ -153,7 +150,7 @@ const App = () => {
       )
     } else if (!times && videoSrc) {
      return(
-      <div>
+      <div style={{ width: '100%', height: '100%', background: 'transparent', marginTop: '0'}}>
         <CustomPlayer 
           url={videoSrc}
           playing={true} 

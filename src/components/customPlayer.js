@@ -3,7 +3,6 @@ import React, { useState, useRef, useEffect } from 'react';
 import ReactPlayer from 'react-player';
 import VideoGenerator from "./videoGenerator.js";
 import PlayerOverlayDiv from "./PlayerOverlayDiv.js";
-import SaveVideo from './SaveVideo.js';
 import './styles/CustomPlayer.css';
 
 import 'bootstrap/dist/css/bootstrap.min.css';
@@ -122,22 +121,19 @@ function CustomPlayer(props) {
 
   const showControls = () => {
     setHovered(true);
-    if (hoverTimeout) {
-      clearTimeout(hoverTimeout);
+    if (hoverTimeout && !hovered) {
+      const timeout = setTimeout(() => {
+        setHovered(false);
+      }, 1500);
+      setHoverTimeout(timeout);
     }
-
-    const timeout = setTimeout(() => {
-      setHovered(false);
-    }, 1500);
-
-    setHoverTimeout(timeout);
   };
 
   const { videoSrc, accessKey, secretKey, bucketName, region, workbookId, nodeId, fileName } = metaData;
 
   return (
     <div 
-      style={{ position: 'relative', paddingBottom: '56.25%', height: 0, width: '100%' }}
+      style={{ position: 'relative', paddingBottom: '55%', height: '100%', width: '100%', background: 'transparent' }}
       onMouseMove={showControls}
     >
       <ReactPlayer
@@ -149,7 +145,7 @@ function CustomPlayer(props) {
         progressInterval={progressInterval}
         width="100%"
         height="100%"
-        style={{ position: 'absolute', top: 0, left: 0 }}
+        style={{ position: 'absolute', top: 0, left: 0, padding: 0}}
         loop={loop}
         playbackRate={playbackRate}
         onDuration={handleDuration}
@@ -160,7 +156,7 @@ function CustomPlayer(props) {
         className={`controls-container d-flex align-items-center justify-content-between ${hovered ? 'hovered' : ''}`}
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}
-        style={{ position: 'absolute', bottom: 0, width: '100%', background: 'rgba(0, 0, 0, 0.5)', padding: '20px 20px' }}
+        style={{ position: 'absolute', width: '100%', background: 'rgba(0, 0, 0, 0.5)', padding: '', marginBottom: '0' }}
       >
         <button className="btn btn-outline-light" onClick={(e) => { setPlaying(!playing); e.currentTarget.blur(); }}>
           {playing ? <i className="fas fa-pause"></i> : <i className="fas fa-play"></i>}
@@ -221,16 +217,6 @@ function CustomPlayer(props) {
         <a href={url} target="_blank" rel="noopener noreferrer" className="btn btn-outline-light" download>
           <i className="fas fa-download"></i>
         </a>
-        <SaveVideo 
-          videoSrc={videoSrc}
-          AwsAccessKey={accessKey}
-          secretKey={secretKey}
-          bucketName={bucketName}
-          region={region}
-          workbookId={workbookId}
-          nodeId={nodeId}
-          fileName={fileName}
-        />
       </div>
     </div>
   );
